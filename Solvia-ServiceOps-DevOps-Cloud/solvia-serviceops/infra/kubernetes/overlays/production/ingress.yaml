@@ -1,0 +1,36 @@
+# Requer ingress-nginx (ou controlador compatível) e secret TLS provisionado.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solvia
+  namespace: solvia
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-buffering: 'off'
+    # Impedir que a rota de métricas seja exposta: também deve ser bloqueada no WAF.
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - solvia.suaempresa.com.br
+      secretName: solvia-tls
+  rules:
+    - host: solvia.suaempresa.com.br
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: solvia
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: solvia
+                port:
+                  name: http

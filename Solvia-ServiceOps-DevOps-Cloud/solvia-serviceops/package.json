@@ -1,0 +1,18 @@
+{
+  "name": "solvia-serviceops",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Plataforma de service desk, ativos e atendimento Microsoft Teams",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "dev": "node --watch server/index.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check server/index.mjs && node --check public/app.js && node --check server/integrations.mjs && node --check server/db.mjs && node --check server/metrics.mjs && node --check scripts/backup.mjs && node --check scripts/backup-scheduler.mjs && node --check scripts/prepare-monitoring.mjs",
+    "backup": "node scripts/backup.mjs"
+  },
+  "license": "UNLICENSED"
+}

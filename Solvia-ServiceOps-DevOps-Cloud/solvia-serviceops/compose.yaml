@@ -1,0 +1,59 @@
+# DEMONSTRAÇÃO local (não expor este serviço na internet).
+# docker compose up -d --build
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: solvia-serviceops:dev
+    environment:
+      NODE_ENV: development
+      DEMO_MODE: 'true'
+      HOST: 0.0.0.0
+      PORT: '3100'
+      BASE_URL: http://localhost:3100
+      SOLVIA_DATA_DIR: /app/data
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+    ports:
+      - '127.0.0.1:3100:3100'
+    volumes:
+      - solvia_data:/app/data
+      - solvia_backups:/app/backups
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 120
+    healthcheck:
+      test: ['CMD','node','-e',"fetch('http://127.0.0.1:3100/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  backup:
+    profiles: ['maintenance']
+    image: solvia-serviceops:dev
+    build:
+      context: .
+      target: runtime
+    command: ['node','scripts/backup.mjs']
+    environment:
+      SOLVIA_DATA_DIR: /app/data
+      SOLVIA_BACKUP_DIR: /app/backups
+      BACKUP_RETENTION_DAYS: '7'
+    volumes:
+      - solvia_data:/app/data:ro
+      - solvia_backups:/app/backups
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
+volumes:
+  solvia_data:
+  solvia_backups:

@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ingress.yaml
+patches:
+  - path: deployment-production.yaml
+images:
+  # Altere para a imagem publicada pelo CI/CD em GHCR, preferindo digest sha256.
+  - name: solvia-serviceops
+    newName: ghcr.io/SEU_USUARIO/solvia-serviceops
+    newTag: latest

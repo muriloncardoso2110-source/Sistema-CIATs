@@ -1,0 +1,24 @@
+groups:
+  - name: solvia-operacao
+    rules:
+      - alert: SolviaOffline
+        expr: up{job="solvia"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Solvia está indisponível para o Prometheus"
+      - alert: SolviaErroHTTP5xx
+        expr: increase(solvia_http_server_errors_total[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Erros 5xx em alta no Solvia"
+      - alert: SolviaEstoqueAbaixoMinimo
+        expr: solvia_low_stock_items > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Há acessórios abaixo do estoque mínimo"

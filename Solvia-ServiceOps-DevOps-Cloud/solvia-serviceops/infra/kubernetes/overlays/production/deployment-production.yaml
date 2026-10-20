@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solvia
+  namespace: solvia
+spec:
+  template:
+    spec:
+      containers:
+        - name: web
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: DEMO_MODE
+              value: 'false'
+            - name: BASE_URL
+              value: https://solvia.suaempresa.com.br
+          envFrom:
+            - secretRef:
+                name: solvia-secrets
+                optional: false

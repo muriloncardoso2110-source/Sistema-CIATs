@@ -1,0 +1,49 @@
+# Usar sobre compose.yaml, com segredos criados por scripts/prepare-monitoring.mjs.
+services:
+  app:
+    environment:
+      METRICS_TOKEN: ${METRICS_TOKEN:?Rode node scripts/prepare-monitoring.mjs e use --env-file .env.monitoring}
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./infra/prometheus/metrics.token:/etc/prometheus/metrics.token:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    ports:
+      - '127.0.0.1:9090:9090'
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Crie com node scripts/prepare-monitoring.mjs}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - '127.0.0.1:3001:3000'
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  prometheus_data:
+  grafana_data:
